@@ -80,7 +80,13 @@ namespace PunchList.Data
             string deleteQuery = "DELETE FROM Tasks WHERE Id = @Id;";
             await conn.ExecuteAsync(deleteQuery, new { Id = taskId });
         }
+        public async Task<Models.TaskItem?> GetByIdAsync(long taskId)
+        {
+            using var conn = new SqliteConnection($"Data Source={_dbPath}");
+            string selectQuery = "SELECT * FROM Tasks WHERE Id = @Id;";
+            return await conn.QueryFirstOrDefaultAsync<Models.TaskItem>(selectQuery, new { Id = taskId });
+        }
 
-     
+
     }
 }
