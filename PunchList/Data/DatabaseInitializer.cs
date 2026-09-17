@@ -1,9 +1,26 @@
-﻿using Microsoft.Data.Sqlite;
+using Microsoft.Data.Sqlite;
 using System.IO;
+using System.Data;
 using Dapper;
 
 namespace PunchList.Data
 {
+    public class DateTimeOffsetHandler : SqlMapper.TypeHandler<DateTimeOffset>
+    {
+        public override void SetValue(IDbDataParameter parameter, DateTimeOffset value)
+        {
+            parameter.Value = value.ToString("o");
+        }
+
+        public override DateTimeOffset Parse(object value)
+        {
+            if (value is DateTimeOffset dto) return dto;
+            if (value is string s) return DateTimeOffset.Parse(s);
+            if (value is DateTime dt) return new DateTimeOffset(dt);
+            return DateTimeOffset.Parse(value.ToString()!);
+        }
+    }
+
     public class DatabaseInitializer
     {
         public string DB_PATH;
@@ -19,6 +36,8 @@ namespace PunchList.Data
 
         public void InitializeDatabase()
         {
+            SqlMapper.AddTypeHandler(new DateTimeOffsetHandler());
+
             using var conn = new SqliteConnection($"Data Source={DB_PATH}");
             conn.Open();
             string createTableQuery = @"

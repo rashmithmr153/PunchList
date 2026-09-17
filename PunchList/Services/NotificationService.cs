@@ -26,7 +26,7 @@ namespace PunchList.Services
         public async void OnToastActivated(ToastNotificationActivatedEventArgsCompat e)
         {
             var args = ToastArguments.Parse(e.Argument);
-            if (args.TryGetValue("action", out string? action) && args.TryGetValue("taskId", out string? taskIdStr) && int.TryParse(taskIdStr, out int taskId))
+            if (args.TryGetValue("action", out string? action) && args.TryGetValue("taskId", out string? taskIdStr) && long.TryParse(taskIdStr, out long taskId))
             {
                 await HandleToastAction(action, taskId);
             }
@@ -34,48 +34,74 @@ namespace PunchList.Services
 
         public void ShowToast(TaskItem task)
         {
-            if (System.Windows.Application.Current?.MainWindow?.IsVisible == true)
+            // 1. Dispatch UI check & in-app banner to the WPF UI thread
+            System.Windows.Application.Current?.Dispatcher?.Invoke(() =>
             {
-                InAppBannerRequested?.Invoke(task);
-            }
+                if (System.Windows.Application.Current?.MainWindow?.IsVisible == true)
+                {
+                    InAppBannerRequested?.Invoke(task);
+                }
+            });
 
-            new ToastContentBuilder()
-                .AddText($"Task Reminder: {task.Title}")
-                .AddText(string.IsNullOrWhiteSpace(task.Notes) ? "Task is overdue!" : task.Notes)
-                .AddArgument("action", "open")
-                .AddArgument("taskId", task.ID.ToString())
-                .AddButton(new ToastButton()
-                    .SetContent("Complete")
-                    .AddArgument("action", "complete")
+            // 2. Windows Native Toast notification
+            try
+            {
+                new ToastContentBuilder()
+                    .AddText($"Task Reminder: {task.Title}")
+                    .AddText(string.IsNullOrWhiteSpace(task.Notes) ? "Task is overdue!" : task.Notes)
+                    .AddArgument("action", "open")
                     .AddArgument("taskId", task.ID.ToString())
+                    .AddButton(new ToastButton()
+                        .SetContent("Complete")
+                        .AddArgument("action", "complete")
+                        .AddArgument("taskId", task.ID.ToString())
                     )
-    
-                .AddButton(new ToastButton()
-                    .SetContent("+5m")
-                    .AddArgument("action", "snooze")
-                    .AddArgument("taskId", task.ID.ToString())
-                )
-                .Show();
+                    .AddButton(new ToastButton()
+                        .SetContent("+5m")
+                        .AddArgument("action", "snooze")
+                        .AddArgument("taskId", task.ID.ToString())
+                    )
+                    .Show();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[Toast Notification Warning] {ex.Message}");
+            }
         }
+
+        public event Action<long, string>? ToastActionCompleted;
 
         public async Task HandleToastAction(string action, long taskId)
         {
-            var task = await _taskRepository.GetByIdAsync(taskId);
-            if (task == null) return;
-            switch (action)
+            try
             {
-                case "complete":
-                    _stateMachine.Complete(task, DateTimeOffset.Now);
-                    await _taskRepository.UpdateAsync(task);
-                    break;
-                case "snooze":
-                    _stateMachine.AddExtraTime(task, TimeSpan.FromMinutes(TaskItem.DEFAULT_SNOOZE_TIMER), DateTimeOffset.Now);
-                    await _taskRepository.UpdateAsync(task);
-                    break;
+                var task = await _taskRepository.GetByIdAsync(taskId);
+                if (task == null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[Toast Action] Task ID {taskId} not found.");
+                    return;
+                }
 
-                
-                default:
-                    break;
+                switch (action)
+                {
+                    case "complete":
+                        _stateMachine.Complete(task, DateTimeOffset.Now);
+                        await _taskRepository.UpdateAsync(task);
+                        break;
+                    case "snooze":
+                        _stateMachine.AddExtraTime(task, TimeSpan.FromMinutes(TaskItem.DEFAULT_SNOOZE_TIMER), DateTimeOffset.Now);
+                        await _taskRepository.UpdateAsync(task);
+                        break;
+                    default:
+                        break;
+                }
+
+                // Notify UI to refresh and dismiss banner
+                ToastActionCompleted?.Invoke(taskId, action);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[Toast Action Exception] {ex}");
             }
             if (action=="open")
             {

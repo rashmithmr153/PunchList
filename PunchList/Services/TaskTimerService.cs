@@ -1,4 +1,4 @@
-﻿using PunchList.Data;
+using PunchList.Data;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace PunchList.Services
@@ -36,18 +36,25 @@ namespace PunchList.Services
 
                 while(!ct.IsCancellationRequested&& await timer.WaitForNextTickAsync(ct))
                 {
-                    var tasks = await _taskRepository.GetActiveAsync();
-                    foreach (var task in tasks)
+                    try
                     {
-                        var result = _stateMachine.Evaluate(task, DateTimeOffset.Now);
-                        if (result.StateChanged)
+                        var tasks = await _taskRepository.GetActiveAsync();
+                        foreach (var task in tasks)
                         {
-                            await _taskRepository.UpdateAsync(task);
+                            var result = _stateMachine.Evaluate(task, DateTimeOffset.Now);
+                            if (result.StateChanged)
+                            {
+                                await _taskRepository.UpdateAsync(task);
+                            }
+                            if (result.ShouldNotify)
+                            {
+                                TaskNotificationTriggered?.Invoke(task);
+                            }
                         }
-                        if (result.ShouldNotify)
-                        {
-                            TaskNotificationTriggered?.Invoke(task);
-                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[Timer Service Error] {ex.Message}");
                     }
                 }
             }

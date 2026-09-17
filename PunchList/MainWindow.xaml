@@ -1,12 +1,1020 @@
-﻿<Window x:Class="PunchList.MainWindow"
+<Window x:Class="PunchList.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PunchList"
+        xmlns:ctrl="clr-namespace:PunchList.Controls"
+        xmlns:tb="http://www.hardcodet.net/taskbar"
+        xmlns:vm="clr-namespace:PunchList.ViewModels"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="Punchlist" Height="720" Width="920"
+        MinHeight="550" MinWidth="720"
+        WindowStartupLocation="CenterScreen"
+        Icon="Resources/logo.ico"
+        Background="{StaticResource BrushBackground}"
+        Foreground="{StaticResource BrushTextPrimary}"
+        FontFamily="{StaticResource FontBody}">
 
+    <Window.Resources>
+        <!-- Style: Clean Minimal Ghost Button -->
+        <Style x:Key="BtnGhost" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource BrushTextMuted}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{StaticResource BrushBorder}" />
+            <Setter Property="Padding" Value="12,6" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource BrushSurfaceHover}" />
+                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource BrushBorderHover}" />
+                                <Setter Property="Foreground" Value="{StaticResource BrushTextPrimary}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource BrushSurfaceActive}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Style: Accent Primary Action Button -->
+        <Style x:Key="BtnPrimary" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource BrushAccent}" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="16,8" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="4"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource BrushAccentHover}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Opacity" Value="0.85" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Style: Icon Action Button (32x32) -->
+        <Style x:Key="BtnIcon" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource BrushTextMuted}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{StaticResource BrushBorder}" />
+            <Setter Property="Width" Value="32" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource BrushSurfaceHover}" />
+                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource BrushBorderHover}" />
+                                <Setter Property="Foreground" Value="{StaticResource BrushTextPrimary}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource BrushSurfaceActive}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Style: Minimal Input Box -->
+        <Style x:Key="InputBox" TargetType="TextBox">
+            <Setter Property="Background" Value="{StaticResource BrushSurface}" />
+            <Setter Property="Foreground" Value="{StaticResource BrushTextPrimary}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{StaticResource BrushBorder}" />
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="CaretBrush" Value="{StaticResource BrushTextPrimary}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4"
+                                SnapsToDevicePixels="True">
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="0" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource BrushBorderHover}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource BrushAccent}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <!-- 0: Banner -->
+            <RowDefinition Height="Auto" />
+            <!-- 1: Navigation & Header -->
+            <RowDefinition Height="Auto" />
+            <!-- 2: Quick-Add Panel -->
+            <RowDefinition Height="Auto" />
+            <!-- 3: Main List Content -->
+            <RowDefinition Height="*" />
+            <!-- 4: Status Bar -->
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- System Tray Icon with Sleek Custom Context Menu -->
+        <tb:TaskbarIcon x:Name="TrayIcon"
+                        ToolTipText="Punchlist"
+                        IconSource="Resources/logo.ico"
+                        TrayLeftMouseUp="OnTrayLeftClick">
+            <tb:TaskbarIcon.ContextMenu>
+                <ContextMenu Style="{StaticResource TrayContextMenuStyle}">
+                    <MenuItem Style="{StaticResource TrayMenuItemStyle}"
+                              Header="Open Punchlist"
+                              Click="OnOpenClick"
+                              FontWeight="SemiBold" />
+                    <Separator Style="{StaticResource TraySeparatorStyle}" />
+                    <MenuItem Style="{StaticResource TrayMenuItemStyle}"
+                              Header="Exit Punchlist"
+                              Click="OnExitClick" />
+                </ContextMenu>
+            </tb:TaskbarIcon.ContextMenu>
+        </tb:TaskbarIcon>
+
+        <!-- 0: IN-APP NOTIFICATION BANNER (Minimal, restrained accent-left border) -->
+        <Border Grid.Row="0"
+                Background="{StaticResource BrushSurface}"
+                BorderThickness="0,0,0,1"
+                BorderBrush="{StaticResource BrushBorder}"
+                Visibility="{Binding ShowBanner, Converter={StaticResource BoolToVis}}">
+            <Grid>
+                <!-- Thin Left Accent Stripe -->
+                <Border Width="3"
+                        HorizontalAlignment="Left"
+                        Background="{StaticResource BrushAccent}" />
+
+                <DockPanel LastChildFill="True" Margin="24,12,24,12">
+                    <!-- Banner Actions -->
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Style="{StaticResource BtnPrimary}"
+                                Content="Complete"
+                                Command="{Binding CompleteTaskCommand}"
+                                CommandParameter="{Binding BannerTask}"
+                                Margin="0,0,8,0" />
+                        <Button Style="{StaticResource BtnGhost}"
+                                Content="+5m"
+                                Command="{Binding SnoozeTaskCommand}"
+                                CommandParameter="{Binding BannerTask}"
+                                Margin="0,0,8,0" />
+                        <Button Style="{StaticResource BtnIcon}"
+                                Command="{Binding DismissBannerCommand}"
+                                ToolTip="Dismiss">
+                            <Path Style="{StaticResource PathIcon}" Data="{StaticResource GeoClose}" />
+                        </Button>
+                    </StackPanel>
+
+                    <!-- Banner Info -->
+                    <StackPanel VerticalAlignment="Center" Margin="10,0,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
+                            <Path Style="{StaticResource PathIcon}"
+                                  Data="{StaticResource GeoClock}"
+                                  Stroke="{StaticResource BrushTextMuted}"
+                                  Margin="0,0,6,0"
+                                  VerticalAlignment="Center" />
+                            <TextBlock Text="REMINDER DUE"
+                                       FontWeight="SemiBold"
+                                       FontSize="11"
+                                       Foreground="{StaticResource BrushTextMuted}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding BannerTask.Title}"
+                                   FontSize="15"
+                                   FontWeight="Bold"
+                                   Foreground="#FFFFFF" />
+                    </StackPanel>
+                </DockPanel>
+            </Grid>
+        </Border>
+
+        <!-- 1: HEADER & SEGMENTED VIEW SWITCHER -->
+        <Border Grid.Row="1"
+                Background="{StaticResource BrushBackground}"
+                Padding="24,18,24,16"
+                BorderThickness="0,0,0,1"
+                BorderBrush="{StaticResource BrushBorder}">
+            <DockPanel LastChildFill="True">
+                <!-- Right Header Actions -->
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <CheckBox Content="Launch on startup"
+                              IsChecked="{Binding IsAutoStartEnabled}"
+                              Command="{Binding ToggleAutoStartCommand}"
+                              Foreground="{StaticResource BrushTextMuted}"
+                              FontSize="13"
+                              VerticalAlignment="Center"
+                              Margin="0,0,16,0" />
+
+                    <Button Style="{StaticResource BtnIcon}"
+                            Command="{Binding LoadDataCommand}"
+                            ToolTip="Refresh tasks">
+                        <Path Style="{StaticResource PathIcon}" Data="{StaticResource GeoRefresh}" />
+                    </Button>
+                </StackPanel>
+
+                <!-- Title & Segmented Switcher -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Image Source="Resources/logo.ico"
+                           Width="24" Height="24"
+                           Margin="0,0,12,0"
+                           VerticalAlignment="Center"
+                           RenderOptions.BitmapScalingMode="HighQuality" />
+                    <TextBlock Text="Punchlist"
+                               FontFamily="{StaticResource FontDisplay}"
+                               FontSize="22"
+                               FontWeight="Bold"
+                               Foreground="{StaticResource BrushTextPrimary}"
+                               Margin="0,0,28,0"
+                               VerticalAlignment="Center" />
+
+                    <!-- Custom Segmented View Toggle (No OS button blue highlights) -->
+                    <Border Background="{StaticResource BrushSurface}"
+                            BorderBrush="{StaticResource BrushBorder}"
+                            BorderThickness="1"
+                            CornerRadius="5"
+                            Padding="3">
+                        <StackPanel Orientation="Horizontal">
+                            <!-- Active View Button -->
+                            <Button Command="{Binding SetViewCommand}" CommandParameter="active"
+                                    Cursor="Hand"
+                                    FontSize="13"
+                                    Padding="16,6">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="tabBorder"
+                                                Background="Transparent"
+                                                BorderBrush="Transparent"
+                                                BorderThickness="1"
+                                                CornerRadius="4"
+                                                Padding="{TemplateBinding Padding}"
+                                                SnapsToDevicePixels="True">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <!-- Selected State -->
+                                            <DataTrigger Binding="{Binding IsHistoryView}" Value="False">
+                                                <Setter TargetName="tabBorder" Property="Background" Value="{StaticResource BrushSurfaceActive}" />
+                                                <Setter TargetName="tabBorder" Property="BorderBrush" Value="{StaticResource BrushBorderHover}" />
+                                                <Setter Property="Foreground" Value="#FFFFFF" />
+                                                <Setter Property="FontWeight" Value="SemiBold" />
+                                            </DataTrigger>
+                                            <!-- Hover on Inactive Tab -->
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding IsHistoryView}" Value="True" />
+                                                    <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True" />
+                                                </MultiDataTrigger.Conditions>
+                                                <Setter TargetName="tabBorder" Property="Background" Value="{StaticResource BrushSurfaceHover}" />
+                                                <Setter Property="Foreground" Value="{StaticResource BrushTextPrimary}" />
+                                            </MultiDataTrigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Foreground" Value="{StaticResource BrushTextMuted}" />
+                                    </Style>
+                                </Button.Style>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Active" />
+                                    <TextBlock Text="{Binding ActiveCount, StringFormat=' ({0})'}" Foreground="{StaticResource BrushTextMuted}" Margin="2,0,0,0" />
+                                </StackPanel>
+                            </Button>
+
+                            <!-- History View Button -->
+                            <Button Command="{Binding SetViewCommand}" CommandParameter="history"
+                                    Cursor="Hand"
+                                    FontSize="13"
+                                    Padding="16,6">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="tabBorder"
+                                                Background="Transparent"
+                                                BorderBrush="Transparent"
+                                                BorderThickness="1"
+                                                CornerRadius="4"
+                                                Padding="{TemplateBinding Padding}"
+                                                SnapsToDevicePixels="True">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <!-- Selected State -->
+                                            <DataTrigger Binding="{Binding IsHistoryView}" Value="True">
+                                                <Setter TargetName="tabBorder" Property="Background" Value="{StaticResource BrushSurfaceActive}" />
+                                                <Setter TargetName="tabBorder" Property="BorderBrush" Value="{StaticResource BrushBorderHover}" />
+                                                <Setter Property="Foreground" Value="#FFFFFF" />
+                                                <Setter Property="FontWeight" Value="SemiBold" />
+                                            </DataTrigger>
+                                            <!-- Hover on Inactive Tab -->
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding IsHistoryView}" Value="False" />
+                                                    <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True" />
+                                                </MultiDataTrigger.Conditions>
+                                                <Setter TargetName="tabBorder" Property="Background" Value="{StaticResource BrushSurfaceHover}" />
+                                                <Setter Property="Foreground" Value="{StaticResource BrushTextPrimary}" />
+                                            </MultiDataTrigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Foreground" Value="{StaticResource BrushTextMuted}" />
+                                    </Style>
+                                </Button.Style>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="History" />
+                                    <TextBlock Text="{Binding HistoryCount, StringFormat=' ({0})'}" Foreground="{StaticResource BrushTextMuted}" Margin="2,0,0,0" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- 2: QUICK-ADD PANEL (Clean, labeled, manual timer textbox + presets) -->
+        <Border Grid.Row="2"
+                Background="{StaticResource BrushSurface}"
+                BorderBrush="{StaticResource BrushBorder}"
+                BorderThickness="1"
+                CornerRadius="6"
+                Margin="24,16,24,12"
+                Padding="18,16">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <!-- Row 0: Labels for Title, Tag, Timer -->
+                    <RowDefinition Height="Auto" />
+                    <!-- Row 1: Inputs for Title, Tag, Timer & Add Button -->
+                    <RowDefinition Height="Auto" />
+                    <!-- Row 2: Label for Notes -->
+                    <RowDefinition Height="Auto" />
+                    <!-- Row 3: Input for Notes -->
+                    <RowDefinition Height="Auto" />
+                    <!-- Row 4: Presets & Live Due Preview -->
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="170" />
+                    <ColumnDefinition Width="130" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Row 0: Field Labels -->
+                <TextBlock Grid.Row="0" Grid.Column="0"
+                           Text="TASK TITLE *"
+                           FontSize="11"
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource BrushTextMuted}"
+                           Margin="2,0,0,5" />
+
+                <TextBlock Grid.Row="0" Grid.Column="1"
+                           Text="PROJECT / TAG (OPTIONAL)"
+                           FontSize="11"
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource BrushTextMuted}"
+                           Margin="2,0,0,5" />
+
+                <TextBlock Grid.Row="0" Grid.Column="2"
+                           Text="TIMER / REMIND IN"
+                           FontSize="11"
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource BrushTextMuted}"
+                           Margin="2,0,0,5" />
+
+                <!-- Row 1: Title Input + Placeholder -->
+                <Grid Grid.Row="1" Grid.Column="0" Margin="0,0,10,12">
+                    <TextBox x:Name="TxtTaskTitle"
+                             Style="{StaticResource InputBox}"
+                             Text="{Binding NewTaskTitle, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBlock Text="What do you need to follow up on?"
+                               Foreground="{StaticResource BrushTextMuted}"
+                               FontSize="13"
+                               Margin="12,0,0,0"
+                               VerticalAlignment="Center"
+                               IsHitTestVisible="False">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Text, ElementName=TxtTaskTitle}" Value="">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Grid>
+
+                <!-- Row 1: Project Tag Input + Placeholder -->
+                <Grid Grid.Row="1" Grid.Column="1" Margin="0,0,10,12">
+                    <TextBox x:Name="TxtProjectTag"
+                             Style="{StaticResource InputBox}"
+                             Text="{Binding NewTaskProjectTag, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBlock Text="e.g. #Backend, #Client"
+                               Foreground="{StaticResource BrushTextMuted}"
+                               FontSize="13"
+                               Margin="12,0,0,0"
+                               VerticalAlignment="Center"
+                               IsHitTestVisible="False">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Text, ElementName=TxtProjectTag}" Value="">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Grid>
+
+                <!-- Row 1: Manual Timer TextBox Input + Placeholder -->
+                <Grid Grid.Row="1" Grid.Column="2" Margin="0,0,10,12">
+                    <TextBox x:Name="TxtTimer"
+                             Style="{StaticResource InputBox}"
+                             Text="{Binding ReminderInput, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBlock Text="e.g. 15m, 2h"
+                               Foreground="{StaticResource BrushTextMuted}"
+                               FontSize="13"
+                               Margin="12,0,0,0"
+                               VerticalAlignment="Center"
+                               IsHitTestVisible="False">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Text, ElementName=TxtTimer}" Value="">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Grid>
+
+                <!-- Row 1: Add Button -->
+                <Button Grid.Row="1" Grid.Column="3"
+                        Style="{StaticResource BtnPrimary}"
+                        Command="{Binding AddTaskCommand}"
+                        Height="36"
+                        Margin="0,0,0,12"
+                        Padding="18,8">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Style="{StaticResource PathIcon}"
+                              Data="{StaticResource GeoAdd}"
+                              Stroke="#FFFFFF"
+                              Margin="0,0,6,0"
+                              VerticalAlignment="Center" />
+                        <TextBlock Text="Add Task" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+
+                <!-- Row 2: Notes Label -->
+                <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="4"
+                           Text="NOTES (OPTIONAL)"
+                           FontSize="11"
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource BrushTextMuted}"
+                           Margin="2,0,0,5" />
+
+                <!-- Row 3: Notes Input + Placeholder -->
+                <Grid Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="4" Margin="0,0,0,14">
+                    <TextBox x:Name="TxtTaskNotes"
+                             Style="{StaticResource InputBox}"
+                             Text="{Binding NewTaskNotes, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBlock Text="Add checklist items, links, or follow-up context..."
+                               Foreground="{StaticResource BrushTextMuted}"
+                               FontSize="13"
+                               Margin="12,0,0,0"
+                               VerticalAlignment="Center"
+                               IsHitTestVisible="False">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Text, ElementName=TxtTaskNotes}" Value="">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Grid>
+
+                <!-- Row 4: Presets & Live Calculated Due Preview -->
+                <DockPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="4" LastChildFill="True">
+                    <!-- Live preview of exact due time -->
+                    <TextBlock Text="{Binding CalculatedDuePreview}"
+                               DockPanel.Dock="Right"
+                               VerticalAlignment="Center"
+                               Foreground="{StaticResource BrushAccent}"
+                               FontWeight="SemiBold"
+                               FontSize="13" />
+
+                    <!-- Quick Preset Buttons (They populate the Timer TextBox) -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="Quick Presets:"
+                                   Foreground="{StaticResource BrushTextMuted}"
+                                   FontSize="12"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,10,0" />
+
+                        <Button Style="{StaticResource BtnGhost}"
+                                Content="15s Test"
+                                Command="{Binding AddTestTaskCommand}"
+                                BorderBrush="{StaticResource BrushAccent}"
+                                Foreground="{StaticResource BrushAccent}"
+                                FontWeight="SemiBold"
+                                Margin="0,0,8,0"
+                                Padding="10,5" />
+
+                        <Button Style="{StaticResource BtnGhost}"
+                                Content="15m"
+                                Command="{Binding SetReminderPresetCommand}"
+                                CommandParameter="15m"
+                                Margin="0,0,8,0"
+                                Padding="10,5" />
+
+                        <Button Style="{StaticResource BtnGhost}"
+                                Content="30m"
+                                Command="{Binding SetReminderPresetCommand}"
+                                CommandParameter="30m"
+                                Margin="0,0,8,0"
+                                Padding="10,5" />
+
+                        <Button Style="{StaticResource BtnGhost}"
+                                Content="1h"
+                                Command="{Binding SetReminderPresetCommand}"
+                                CommandParameter="1h"
+                                Margin="0,0,8,0"
+                                Padding="10,5" />
+
+                        <Button Style="{StaticResource BtnGhost}"
+                                Content="4h"
+                                Command="{Binding SetReminderPresetCommand}"
+                                CommandParameter="4h"
+                                Margin="0,0,8,0"
+                                Padding="10,5" />
+
+                        <Button Style="{StaticResource BtnGhost}"
+                                Content="Tomorrow 9am"
+                                Command="{Binding SetReminderPresetCommand}"
+                                CommandParameter="Tomorrow 9am"
+                                Padding="10,5" />
+                    </StackPanel>
+                </DockPanel>
+            </Grid>
+        </Border>
+
+        <!-- 3: MAIN LIST CONTENT (ACTIVE vs HISTORY) -->
+        <Grid Grid.Row="3" Margin="24,4,24,12">
+            <!-- VIEW A: ACTIVE TASKS -->
+            <Grid>
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Visibility" Value="Visible" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsHistoryView}" Value="True">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+
+                <!-- Empty State -->
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ActiveCount}" Value="0">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <Path Style="{StaticResource PathIcon}"
+                          Data="{StaticResource GeoCheck}"
+                          Stroke="{StaticResource BrushTextMuted}"
+                          Width="36" Height="36"
+                          Margin="0,0,0,14"
+                          HorizontalAlignment="Center" />
+                    <TextBlock Text="No active tasks"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource BrushTextPrimary}"
+                               HorizontalAlignment="Center" />
+                    <TextBlock Text="Add a follow-up task above to get started."
+                               FontSize="13"
+                               Foreground="{StaticResource BrushTextMuted}"
+                               Margin="0,6,0,0"
+                               HorizontalAlignment="Center" />
+                </StackPanel>
+
+                <!-- Active Task Items -->
+                <ListBox ItemsSource="{Binding ActiveTasks}"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="Margin" Value="0,0,0,8" />
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border x:Name="ItemWrapper"
+                                                Background="Transparent"
+                                                BorderThickness="0"
+                                                CornerRadius="5">
+                                            <ContentPresenter />
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="ItemWrapper" Property="Background" Value="{StaticResource BrushAccentSubtle}" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <!-- TASK CARD: Single-hue minimal design -->
+                            <Border Background="{StaticResource BrushSurface}"
+                                    BorderBrush="{StaticResource BrushBorder}"
+                                    BorderThickness="1"
+                                    CornerRadius="5"
+                                    SnapsToDevicePixels="True">
+                                <Grid>
+                                    <!-- Thin Left Accent Border (Only on Overdue) -->
+                                    <Border x:Name="OverdueStripe"
+                                            Width="3"
+                                            HorizontalAlignment="Left"
+                                            Background="{StaticResource BrushAccent}"
+                                            CornerRadius="4,0,0,4">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsOverdue}" Value="True">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                    </Border>
+
+                                    <DockPanel LastChildFill="True" Margin="18,14">
+                                        <!-- Action Buttons (Right) -->
+                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+                                            <!-- Complete Button -->
+                                            <Button Style="{StaticResource BtnIcon}"
+                                                    Command="{Binding DataContext.CompleteTaskCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip="Mark Completed"
+                                                    Margin="0,0,6,0">
+                                                <Path Style="{StaticResource PathIcon}" Data="{StaticResource GeoCheck}" />
+                                            </Button>
+
+                                            <!-- Snooze Button -->
+                                            <Button Style="{StaticResource BtnIcon}"
+                                                    Command="{Binding DataContext.SnoozeTaskCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip="Snooze +5 minutes"
+                                                    Margin="0,0,6,0">
+                                                <Path Style="{StaticResource PathIcon}" Data="{StaticResource GeoSnooze}" />
+                                            </Button>
+
+                                            <!-- Delete Button -->
+                                            <Button Style="{StaticResource BtnIcon}"
+                                                    Command="{Binding DataContext.DeleteTaskCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip="Delete">
+                                                <Path Style="{StaticResource PathIcon}" Data="{StaticResource GeoTrash}" />
+                                            </Button>
+                                        </StackPanel>
+
+                                        <!-- Task Information (Left) -->
+                                        <StackPanel VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <!-- Project Tag Pill -->
+                                                <Border Background="{StaticResource BrushSurfaceActive}"
+                                                        BorderBrush="{StaticResource BrushBorder}"
+                                                        BorderThickness="1"
+                                                        CornerRadius="3"
+                                                        Padding="7,2"
+                                                        Margin="0,0,10,0"
+                                                        VerticalAlignment="Center">
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding ProjectTag}" Value="{x:Null}">
+                                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding ProjectTag}" Value="">
+                                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Border.Style>
+                                                    <TextBlock Text="{Binding ProjectTag}"
+                                                               FontSize="11"
+                                                               FontWeight="Medium"
+                                                               Foreground="{StaticResource BrushTextMuted}" />
+                                                </Border>
+
+                                                <!-- Task Title (Pure white and bold when overdue) -->
+                                                <TextBlock Text="{Binding Title}"
+                                                           FontSize="15"
+                                                           VerticalAlignment="Center">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Foreground" Value="{StaticResource BrushTextPrimary}" />
+                                                            <Setter Property="FontWeight" Value="Normal" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsOverdue}" Value="True">
+                                                                    <Setter Property="Foreground" Value="#FFFFFF" />
+                                                                    <Setter Property="FontWeight" Value="Bold" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </StackPanel>
+
+                                            <!-- Notes (if any) -->
+                                            <TextBlock Text="{Binding Notes}"
+                                                       Foreground="{StaticResource BrushTextMuted}"
+                                                       FontSize="13"
+                                                       Margin="0,5,0,0"
+                                                       TextWrapping="Wrap">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Notes}" Value="{x:Null}">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Notes}" Value="">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+
+                                            <!-- Timer Progress Ring & Live Countdown -->
+                                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0" VerticalAlignment="Center">
+                                                <!-- Timer Progress Ring (The single accent color) -->
+                                                <ctrl:ProgressRing Width="16" Height="16"
+                                                                   StrokeThickness="1.75"
+                                                                   Progress="{Binding Progress}"
+                                                                   TrackBrush="{StaticResource BrushBorder}"
+                                                                   IndicatorBrush="{StaticResource BrushAccent}"
+                                                                   Margin="0,0,7,0"
+                                                                   VerticalAlignment="Center" />
+
+                                                <!-- Live Countdown / Relative Time in Display Font -->
+                                                <TextBlock Text="{Binding RemainingTimeText}"
+                                                           FontFamily="{StaticResource FontDisplay}"
+                                                           FontSize="12"
+                                                           VerticalAlignment="Center">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Foreground" Value="{StaticResource BrushTextMuted}" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsOverdue}" Value="True">
+                                                                    <Setter Property="Foreground" Value="#FFFFFF" />
+                                                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+
+                                                <!-- Snooze Count indicator -->
+                                                <TextBlock Text="{Binding SnoozeCount, StringFormat='  •  snoozed {0}x'}"
+                                                           FontSize="12"
+                                                           Foreground="{StaticResource BrushTextMuted}"
+                                                           VerticalAlignment="Center">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding SnoozeCount}" Value="0">
+                                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+
+            <!-- VIEW B: HISTORY VIEW -->
+            <Grid>
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsHistoryView}" Value="True">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+
+                <!-- Empty State -->
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HistoryCount}" Value="0">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <Path Style="{StaticResource PathIcon}"
+                          Data="{StaticResource GeoHistory}"
+                          Stroke="{StaticResource BrushTextMuted}"
+                          Width="36" Height="36"
+                          Margin="0,0,0,14"
+                          HorizontalAlignment="Center" />
+                    <TextBlock Text="No completed tasks yet"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource BrushTextPrimary}"
+                               HorizontalAlignment="Center" />
+                </StackPanel>
+
+                <!-- History Items -->
+                <ListBox ItemsSource="{Binding HistoryTasks}"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="Margin" Value="0,0,0,8" />
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <ContentPresenter />
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{StaticResource BrushSurface}"
+                                    BorderBrush="{StaticResource BrushBorder}"
+                                    BorderThickness="1"
+                                    CornerRadius="5"
+                                    Padding="18,12">
+                                <DockPanel LastChildFill="True">
+                                    <Button DockPanel.Dock="Right"
+                                            Style="{StaticResource BtnIcon}"
+                                            Command="{Binding DataContext.DeleteTaskCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding}"
+                                            ToolTip="Delete from History">
+                                        <Path Style="{StaticResource PathIcon}" Data="{StaticResource GeoTrash}" />
+                                    </Button>
+
+                                    <StackPanel VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Path Style="{StaticResource PathIcon}"
+                                                  Data="{StaticResource GeoCheck}"
+                                                  Stroke="{StaticResource BrushTextMuted}"
+                                                  Margin="0,0,8,0"
+                                                  VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding Title}"
+                                                       FontSize="14"
+                                                       Foreground="{StaticResource BrushTextPrimary}"
+                                                       VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding ProjectTag, StringFormat='  [{0}]'}"
+                                                       Foreground="{StaticResource BrushTextMuted}"
+                                                       FontSize="12"
+                                                       VerticalAlignment="Center" />
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal" Margin="22,5,0,0">
+                                            <TextBlock Text="Completed " FontSize="12" Foreground="{StaticResource BrushTextMuted}" />
+                                            <TextBlock Text="{Binding CompletedAt, StringFormat='{}{0:MMM dd, yyyy  HH:mm}'}"
+                                                       FontSize="12"
+                                                       Foreground="{StaticResource BrushTextMuted}" />
+                                            <TextBlock Text="{Binding SnoozeCount, StringFormat='  •  Snoozed {0}x'}"
+                                                       FontSize="12"
+                                                       Foreground="{StaticResource BrushTextMuted}">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding SnoozeCount}" Value="0">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+        </Grid>
+
+        <!-- 4: BOTTOM STATUS BAR -->
+        <Border Grid.Row="4"
+                Background="{StaticResource BrushBackground}"
+                Padding="24,8"
+                BorderThickness="0,1,0,0"
+                BorderBrush="{StaticResource BrushBorder}">
+            <DockPanel LastChildFill="True">
+                <TextBlock DockPanel.Dock="Right"
+                           Text="Punchlist • Windows Background Engine"
+                           FontSize="12"
+                           Foreground="{StaticResource BrushTextMuted}" />
+                <TextBlock Text="{Binding StatusMessage}"
+                           FontSize="12"
+                           Foreground="{StaticResource BrushTextMuted}" />
+            </DockPanel>
+        </Border>
     </Grid>
 </Window>
